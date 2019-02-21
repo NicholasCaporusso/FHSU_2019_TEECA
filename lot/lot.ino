@@ -1,31 +1,30 @@
 /* PARKING SETTINGS */
 const int sensorThreshold = 3;
-const int parkingSpots=15;
-int echo_pins={};
-int trigger_pins={};
-int LED_pins={};
+const int parkingSpots=1;
+int trigger_pins[]={10};
+int echo_pins[]={11};
+int LED_pins[]={13};
 
 /* DO NOT MODIFY BELOW*/
-/* SENSORS */
 int sensors_status[parkingSpots];
 unsigned long sensors_millis[parkingSpots];
 
 void setup() {
   for(int i=0;i<parkingSpots;i++){
-	pinMode(trigger_pins[i], OUTPUT);
+	  pinMode(trigger_pins[i], OUTPUT);
     pinMode(echo_pins[i], INPUT); 
     pinMode(LED_pins[i], OUTPUT);
-	sensors_status[i]=0;
-	sensors_millis[i]=0;
+	  sensors_status[i]=0;
+	  sensors_millis[i]=0;
   }
-  Serial.begin(9600); // Starts the serial communication
+  Serial.begin(9600);
 }
 
 void loop(){
   unsigned long currentMicros=micros();
   unsigned long currentMillis=millis();
   for(int i=0;i<parkingSpots;i++){
-	  checkSpot(i);
+	checkSpot(i,currentMicros);
   }
 }
 
@@ -42,7 +41,7 @@ void checkSpot(int sensor, unsigned long currentMicros){
       sensors_millis[sensor] = currentMicros;
       digitalWrite(trigger_pins[sensor], HIGH);
       break;
-    case 2: // read
+    case 2: // read value
       if (currentMicros - sensors_millis[sensor] < 10) return;
       sensors_status[sensor]=0;
       sensors_millis[sensor] = currentMicros;
@@ -52,7 +51,7 @@ void checkSpot(int sensor, unsigned long currentMicros){
       Serial.print("Distance: ");
       Serial.println(distance);
       if(distance<sensorThreshold) digitalWrite(LED_pins[sensor],LOW);
-	  else digitalWrite(LED_pins[sensor],HIGH);
+	    else digitalWrite(LED_pins[sensor],HIGH);
       break;
   }
 }
