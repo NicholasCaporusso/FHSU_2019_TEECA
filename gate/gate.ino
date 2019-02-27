@@ -1,12 +1,19 @@
+#include <Arduino.h>
+#include <TM1637Display.h>
+
+#define CLK 23
+#define DIO 22
+
+TM1637Display display(CLK, DIO);
 /* PARKING SETTINGS */
 const int spots_available=15;
-int spots_current=15;
+int spots_current=spots_available;
 
-/* DO NOT MODIFY BELOW*/
 const int motorSpins = 700; // steps
 const int motorInterval = 3;
 const int sensorThreshold = 3;
 
+/* DO NOT MODIFY BELOW*/
 /* ENTRY GATE */
 // Motor
 const int entry1_motor_pin0 = 2;
@@ -25,7 +32,11 @@ unsigned long entry1_sensor_micros = 0;
 // LED
 const int entry1_LED_pin = 13;
 
-/* EXIT GATE */
+
+/*
+int exit1_sensor_status = 0;
+
+ EXIT GATE 
 // Motor
 const int exit1_motor_pin0 = 6;
 const int exit1_motor_pin1 = 7;
@@ -36,16 +47,18 @@ int exit1_motor_currentSpins = 0;
 int exit1_motor_step = 0;
 int exit1_motor_status=-1;
 
+unsigned long exit1_sensor_micros = 0;*/
+
 void setup() {
   pinMode(entry1_motor_pin0, OUTPUT);
   pinMode(entry1_motor_pin1, OUTPUT);
   pinMode(entry1_motor_pin2, OUTPUT);
   pinMode(entry1_motor_pin3, OUTPUT);
   
-  pinMode(exit1_motor_pin0, OUTPUT);
+/*  pinMode(exit1_motor_pin0, OUTPUT);
   pinMode(exit1_motor_pin1, OUTPUT);
   pinMode(exit1_motor_pin2, OUTPUT);
-  pinMode(exit1_motor_pin3, OUTPUT);
+  pinMode(exit1_motor_pin3, OUTPUT);*/
   pinMode(entry1_sensor_pinTrigger, OUTPUT); // Sets the trigpin as an Output
   pinMode(entry1_sensor_pinEcho, INPUT); // Sets the echopin as an Input
   pinMode(entry1_LED_pin, OUTPUT); // Sets the entry1_LED_pin as Output
@@ -53,12 +66,15 @@ void setup() {
 }
 
 void loop(){
+  
+  display.setBrightness(0x0f);
+  display.showNumberDec(spots_current, true);  // Expect: 0000
   unsigned long currentMicros=micros();
   unsigned long currentMillis=millis();
   check_entry1(currentMicros,currentMillis);
-  currentMicros=micros();
-  currentMillis=millis();
-  check_exit1(currentMicros,currentMillis);
+  //currentMicros=micros();
+  //currentMillis=millis();
+  //check_exit1(currentMicros,currentMillis,exit1_sensor_status,exit1_sensor_micros,exit1_sensor_pinTrigger);
 }
 
 void check_entry1(long currentMicros,long currentMillis){
@@ -77,12 +93,12 @@ void check_entry1(long currentMicros,long currentMillis){
       break;
   }
 }
-
-void check_exit1(long currentMicros,long currentMillis){
+/*
+void check_exit1(long currentMicros,long currentMillis,int exit1_sensor_status,unsigned long exit1_sensor_micros,int exit1_sensor_pinTrigger){
   switch(exit1_motor_status){
     case 1:
       Serial.println("Exit gate: open");
-      exit1_sensorMeasure(currentMicros);
+      exit1_sensorMeasure(currentMicros,exit1_sensor_status,exit1_sensor_micros,exit1_sensor_pinTrigger);
       break;
     case 0:
       Serial.println("Exit gate: closing...");
@@ -94,7 +110,7 @@ void check_exit1(long currentMicros,long currentMillis){
       break;
   }
 }
-
+*/
 void entry1_sensorMeasure(unsigned long currentMicros) {
   switch(entry1_sensor_status){
     case 0: // reset
@@ -119,7 +135,11 @@ void entry1_sensorMeasure(unsigned long currentMicros) {
       int entry1_sensor_distance = entry1_sensor_duration * 0.034 / 2;
       Serial.print("Distance: ");
       Serial.println(entry1_sensor_distance);
-      if(entry1_sensor_distance<sensorThreshold) entry1_motor_status=0;
+      if(entry1_sensor_distance<sensorThreshold){
+        spots_current--;
+        if(spots_current<0) spots_current=0;
+        entry1_motor_status=0;
+      }
       break;
   }
 }
@@ -207,8 +227,8 @@ void entry1_motorClose(unsigned long currentMillis) {
     entry1_motor_currentSpins = 0;
   }
 }
-
-void exit1_sensorMeasure(unsigned long currentMicros) {
+/*
+void exit1_sensorMeasure(unsigned long currentMicros,int exit1_sensor_status,unsigned long exit1_sensor_micros,int exit1_sensor_pinTrigger) {
   switch(exit1_sensor_status){
     case 0: // reset
       exit1_sensor_status = 1;
@@ -319,4 +339,5 @@ void exit1_motorClose(unsigned long currentMillis) {
     digitalWrite(exit1_LED_pin, LOW); // turn the LED on (HIGH is the voltage level)
     exit1_motor_currentSpins = 0;
   }
-}
+}*/
+
